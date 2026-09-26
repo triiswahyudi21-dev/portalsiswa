@@ -65,16 +65,16 @@
     } from 'lucide-react';
 
     // Konfigurasi Firebase Fallback
-    const firebaseConfig = typeof __firebase_config !== 'undefined' 
-      ? JSON.parse(__firebase_config) 
-      : {
-          apiKey: "demo-api-key",
-          authDomain: "demo-app.firebaseapp.com",
-          projectId: "demo-app",
-          storageBucket: "demo-app.appspot.com",
-          messagingSenderId: "123456789",
-          appId: "1:123456789:web:123456789"
-        };
+    const firebaseConfig = {
+    apiKey: "AIzaSyCeLgFGRdFmnTHIW2j8DRChOakANYYRBT0",
+    authDomain: "portalguru-7b0f3.firebaseapp.com",
+    databaseURL: "https://portalguru-7b0f3-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "portalguru-7b0f3",
+    storageBucket: "portalguru-7b0f3.firebasestorage.app",
+    messagingSenderId: "985612460607",
+    appId: "1:985612460607:web:0125a10149ebf6884b8e8a",
+    measurementId: "G-M2QJTR8G6R"
+  };
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
