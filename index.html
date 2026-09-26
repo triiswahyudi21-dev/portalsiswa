@@ -86,9 +86,71 @@
       ? new BroadcastChannel('elearning_ips_realtime_channel')
       : null;
 
-    // Data Bawaan Dikosongkan agar portal siswa bersih saat pertama kali dibuka
-    const defaultMaterials = [];
-    const defaultStudents = [];
+    const defaultMaterials = [
+      { 
+        id: 'm1', 
+        title: 'Mengenal Kebutuhan Manusia & Kelangkaan Sumber Daya', 
+        kelas: '7', 
+        subKelasTarget: 'semua', 
+        semester: '1', 
+        durationMinutes: 15,
+        content: `Kebutuhan manusia merupakan aspek esensial yang harus dipenuhi untuk mempertahankan kelangsungan hidup.
+
+1. Kebutuhan Menurut Tingkat Intensitas:
+   - Kebutuhan Primer: Kebutuhan pokok seperti pangan, sandang, dan papan.
+   - Kebutuhan Sekunder: Kebutuhan pelengkap setelah kebutuhan primer terpenuhi, seperti perabot rumah dan alat komunikasi.
+   - Kebutuhan Tersier: Kebutuhan akan barang mewah untuk meningkatkan status sosial.
+
+2. Kelangkaan (Scarcity):
+   Kelangkaan terjadi ketika alat pemuas kebutuhan jumlahnya terbatas sementara kebutuhan manusia tidak terbatas.
+   Faktor penyebab kelangkaan meliputi:
+   - Keterbatasan sumber daya alam.
+   - Perbedaan letak geografis.
+   - Pertumbuhan jumlah penduduk yang pesat.
+   - Keterbatasan kemampuan produksi manusia.`, 
+        imageUrl: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
+        source: 'Buku Paket IPS SMP Kelas 7 Kemendikbudristek Bab 1',
+        createdBy: 'Dra. Hj. Siti Rahmah, M.Pd.',
+        createdAt: Date.now()
+      },
+      {
+        id: 'm2',
+        title: 'Perubahan Sosial Budaya dan Dampak Globalisasi',
+        kelas: '9',
+        subKelasTarget: 'semua',
+        semester: '1',
+        durationMinutes: 20,
+        content: `Perubahan sosial budaya adalah perubahan yang terjadi pada sistem sosial, struktur, dan fungsi masyarakat.
+
+A. Bentuk Perubahan Sosial Budaya:
+1. Dilihat dari waktunya: Evolusi (lambat) dan Revolusi (cepat).
+2. Dilihat dari pengaruhnya: Pengaruh kecil dan Pengaruh besar.
+3. Dilihat dari perencanaannya: Perubahan yang direncanakan dan tidak direncanakan.
+
+B. Globalisasi:
+Globalisasi adalah proses mendunia yang menghilangkan sekat geografis antar negara. Globalisasi membawa dampak positif seperti kemajuan teknologi informasi, namun juga dampak negatif seperti westernisasi dan demoralisasi jika tidak disikapi secara bijak.`,
+        imageUrl: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=80',
+        source: 'Buku Paket IPS Kelas 9 Kurikulum Merdeka Bab 2',
+        createdBy: 'Dra. Hj. Siti Rahmah, M.Pd.',
+        createdAt: Date.now() - 86400000
+      }
+    ];
+
+    const defaultStudents = [
+      { id: 's1', name: 'Ahmad Rizky Pratama', kelas: '7', subKelas: 'A' },
+      { id: 's2', name: 'Anisa Rahmawati', kelas: '7', subKelas: 'A' },
+      { id: 's3', name: 'Budi Santoso', kelas: '7', subKelas: 'B' },
+      { id: 's4', name: 'Bayu Nugroho', kelas: '7', subKelas: 'C' },
+      { id: 's5', name: 'Dina Mariana', kelas: '7', subKelas: 'D' },
+      { id: 's6', name: 'Citra Dewi Kartika', kelas: '8', subKelas: 'A' },
+      { id: 's7', name: 'Dimas Anggara', kelas: '8', subKelas: 'B' },
+      { id: 's8', name: 'Eka Putri Utami', kelas: '8', subKelas: 'C' },
+      { id: 's9', name: 'Fajar Hidayat', kelas: '8', subKelas: 'D' },
+      { id: 's10', name: 'Farel Prayoga', kelas: '9', subKelas: 'A' },
+      { id: 's11', name: 'Gilang Ramadhan', kelas: '9', subKelas: 'B' },
+      { id: 's12', name: 'Hani Sofia', kelas: '9', subKelas: 'C' },
+      { id: 's13', name: 'Indah Permata', kelas: '9', subKelas: 'D' }
+    ];
 
     function StudentApp() {
       const [appSession, setAppSession] = useState(() => {
@@ -103,7 +165,10 @@
 
       const [questions, setQuestions] = useState(() => {
         const local = localStorage.getItem('elearning_questions_v3');
-        return local ? JSON.parse(local) : [];
+        return local ? JSON.parse(local) : [
+          { id: 'q1', materialId: 'm1', type: 'pg', questionText: 'Makanan, pakaian, dan tempat tinggal termasuk dalam jenis kebutuhan...', optionA: 'Primer', optionB: 'Sekunder', optionC: 'Tersier', optionD: 'Jasmani', correctAnswer: 'A' },
+          { id: 'q2', materialId: 'm1', type: 'isian', questionText: 'Kondisi dimana alat pemuas kebutuhan jumlahnya terbatas sedangkan kebutuhan tidak terbatas disebut...', correctAnswer: 'kelangkaan' }
+        ];
       });
 
       const [students, setStudents] = useState(() => {
