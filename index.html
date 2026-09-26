@@ -58,7 +58,7 @@
     import { createRoot } from 'react-dom/client';
     import { initializeApp } from 'firebase/app';
     import { getAuth, signInAnonymously, signInWithCustomToken } from 'firebase/auth';
-    import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+    import { getFirestore, doc, setDoc, onSnapshot, collection, serverTimestamp } from 'firebase/firestore';
     import { 
       BookOpen, Users, LogIn, CheckCircle, Award, ArrowLeft, LogOut, 
       Clock, AlertTriangle, ShieldAlert, Sparkles
@@ -205,6 +205,29 @@ Globalisasi adalah proses mendunia yang menghilangkan sekat geografis antar nega
 
         window.addEventListener('storage', handleStorageChange);
         return () => window.removeEventListener('storage', handleStorageChange);
+      }, []);
+
+      // Realtime listener dari Firebase Firestore untuk menarik daftar siswa yang diinput Guru
+      useEffect(() => {
+        try {
+          const studentsRef = collection(db, 'artifacts', appId, 'public', 'data', 'students');
+          const unsubscribe = onSnapshot(studentsRef, (snapshot) => {
+            if (!snapshot.empty) {
+              const fetchedStudents = [];
+              snapshot.forEach((doc) => {
+                fetchedStudents.push({ id: doc.id, ...doc.data() });
+              });
+              if (fetchedStudents.length > 0) {
+                setStudents(fetchedStudents);
+                localStorage.setItem('elearning_students_v3', JSON.stringify(fetchedStudents));
+              }
+            }
+          }, (err) => console.log("Firestore sync disabled/offline fallback active"));
+
+          return () => unsubscribe();
+        } catch (e) {
+          console.log("Firebase listener fallback");
+        }
       }, []);
 
       useEffect(() => {
