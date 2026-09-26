@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal Siswa - E-Learning IPS SMP/MTs</title>
+
+  <!-- Google Font: Plus Jakarta Sans -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Babel Standalone untuk JSX -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+  </style>
+
+  <!-- Import Map untuk React, Firebase, dan Lucide Icons -->
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "firebase/app": "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js",
+        "firebase/auth": "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js",
+        "firebase/firestore": "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js",
+        "lucide-react": "https://esm.sh/lucide-react@0.263.1"
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen antialiased selection:bg-blue-500 selection:text-white">
+  <div id="root"></div>
+
+  <script type="text/babel" data-type="module">
+    import React, { useState, useEffect } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import { initializeApp } from 'firebase/app';
+    import { getAuth, signInAnonymously, signInWithCustomToken } from 'firebase/auth';
+    import { getFirestore, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+    import { 
+      BookOpen, Users, LogIn, CheckCircle, Award, ArrowLeft, LogOut, 
+      Clock, AlertTriangle, ShieldAlert, Sparkles
+    } from 'lucide-react';
+
+    // Konfigurasi Firebase Fallback
+    const firebaseConfig = typeof __firebase_config !== 'undefined' 
+      ? JSON.parse(__firebase_config) 
+      : {
+          apiKey: "demo-api-key",
+          authDomain: "demo-app.firebaseapp.com",
+          projectId: "demo-app",
+          storageBucket: "demo-app.appspot.com",
+          messagingSenderId: "123456789",
+          appId: "1:123456789:web:123456789"
+        };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'elearning-ips-v3';
+
+    // BroadcastChannel untuk Sync Realtime antar Tab Browser
+    const broadcast = typeof window !== 'undefined' && 'BroadcastChannel' in window
+      ? new BroadcastChannel('elearning_ips_realtime_channel')
+      : null;
+
+    const defaultMaterials = [
+      { 
+        id: 'm1', 
+        title: 'Mengenal Kebutuhan Manusia & Kelangkaan Sumber Daya', 
+        kelas: '7', 
+        subKelasTarget: 'semua', 
+        semester: '1', 
+        durationMinutes: 15,
+        content: `Kebutuhan manusia merupakan aspek esensial yang harus dipenuhi untuk mempertahankan kelangsungan hidup.
+
+1. Kebutuhan Menurut Tingkat Intensitas:
+   - Kebutuhan Primer: Kebutuhan pokok seperti pangan, sandang, dan papan.
+   - Kebutuhan Sekunder: Kebutuhan pelengkap setelah kebutuhan primer terpenuhi, seperti perabot rumah dan alat komunikasi.
+   - Kebutuhan Tersier: Kebutuhan akan barang mewah untuk meningkatkan status sosial.
+
+2. Kelangkaan (Scarcity):
+   Kelangkaan terjadi ketika alat pemuas kebutuhan jumlahnya terbatas sementara kebutuhan manusia tidak terbatas.
+   Faktor penyebab kelangkaan meliputi:
+   - Keterbatasan sumber daya alam.
+   - Perbedaan letak geografis.
+   - Pertumbuhan jumlah penduduk yang pesat.
+   - Keterbatasan kemampuan produksi manusia.`, 
+        imageUrl: 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?auto=format&fit=crop&w=800&q=80',
+        source: 'Buku Paket IPS SMP Kelas 7 Kemendikbudristek Bab 1',
+        createdBy: 'Dra. Hj. Siti Rahmah, M.Pd.',
+        createdAt: Date.now()
+      },
+      {
+        id: 'm2',
+        title: 'Perubahan Sosial Budaya dan Dampak Globalisasi',
+        kelas: '9',
+        subKelasTarget: 'semua',
+        semester: '1',
+        durationMinutes: 20,
+        content: `Perubahan sosial budaya adalah perubahan yang terjadi pada sistem sosial, struktur, dan fungsi masyarakat.
+
+A. Bentuk Perubahan Sosial Budaya:
+1. Dilihat dari waktunya: Evolusi (lambat) dan Revolusi (cepat).
+2. Dilihat dari pengaruhnya: Pengaruh kecil dan Pengaruh besar.
+3. Dilihat dari perencanaannya: Perubahan yang direncanakan dan tidak direncanakan.
+
+B. Globalisasi:
+Globalisasi adalah proses mendunia yang menghilangkan sekat geografis antar negara. Globalisasi membawa dampak positif seperti kemajuan teknologi informasi, namun juga dampak negatif seperti westernisasi dan demoralisasi jika tidak disikapi secara bijak.`,
+        imageUrl: 'https://images.unsplash.com/photo-1526778548025-fa2f459cd5c1?auto=format&fit=crop&w=800&q=80',
+        source: 'Buku Paket IPS Kelas 9 Kurikulum Merdeka Bab 2',
+        createdBy: 'Dra. Hj. Siti Rahmah, M.Pd.',
+        createdAt: Date.now() - 86400000
+      }
+    ];
+
+    const defaultStudents = [
+      { id: 's1', name: 'Ahmad Rizky Pratama', kelas: '7', subKelas: 'A' },
+      { id: 's2', name: 'Anisa Rahmawati', kelas: '7', subKelas: 'A' },
+      { id: 's3', name: 'Budi Santoso', kelas: '7', subKelas: 'B' },
+      { id: 's4', name: 'Bayu Nugroho', kelas: '7', subKelas: 'C' },
+      { id: 's5', name: 'Dina Mariana', kelas: '7', subKelas: 'D' },
+      { id: 's6', name: 'Citra Dewi Kartika', kelas: '8', subKelas: 'A' },
+      { id: 's7', name: 'Dimas Anggara', kelas: '8', subKelas: 'B' },
+      { id: 's8', name: 'Eka Putri Utami', kelas: '8', subKelas: 'C' },
+      { id: 's9', name: 'Fajar Hidayat', kelas: '8', subKelas: 'D' },
+      { id: 's10', name: 'Farel Prayoga', kelas: '9', subKelas: 'A' },
+      { id: 's11', name: 'Gilang Ramadhan', kelas: '9', subKelas: 'B' },
+      { id: 's12', name: 'Hani Sofia', kelas: '9', subKelas: 'C' },
+      { id: 's13', name: 'Indah Permata', kelas: '9', subKelas: 'D' }
+    ];
+
+    function StudentApp() {
+      const [appSession, setAppSession] = useState(() => {
+        const saved = localStorage.getItem('elearning_student_session_v3');
+        return saved ? JSON.parse(saved) : null;
+      });
+
+      const [materials, setMaterials] = useState(() => {
+        const local = localStorage.getItem('elearning_materials_v3');
+        return local ? JSON.parse(local) : defaultMaterials;
+      });
+
+      const [questions, setQuestions] = useState(() => {
+        const local = localStorage.getItem('elearning_questions_v3');
+        return local ? JSON.parse(local) : [
+          { id: 'q1', materialId: 'm1', type: 'pg', questionText: 'Makanan, pakaian, dan tempat tinggal termasuk dalam jenis kebutuhan...', optionA: 'Primer', optionB: 'Sekunder', optionC: 'Tersier', optionD: 'Jasmani', correctAnswer: 'A' },
+          { id: 'q2', materialId: 'm1', type: 'isian', questionText: 'Kondisi dimana alat pemuas kebutuhan jumlahnya terbatas sedangkan kebutuhan tidak terbatas disebut...', correctAnswer: 'kelangkaan' }
+        ];
+      });
+
+      const [students, setStudents] = useState(() => {
+        const local = localStorage.getItem('elearning_students_v3');
+        return local ? JSON.parse(local) : defaultStudents;
+      });
+
+      const [scores, setScores] = useState(() => {
+        const local = localStorage.getItem('elearning_scores_v3');
+        return local ? JSON.parse(local) : [];
+      });
+
+      const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'belajar'
+      const [selectedMaterial, setSelectedMaterial] = useState(null);
+      const [notification, setNotification] = useState(null);
+
+      // Form Login Siswa State
+      const [loginSiswaKelas, setLoginSiswaKelas] = useState('7');
+      const [loginSiswaSubKelas, setLoginSiswaSubKelas] = useState('A');
+      const [loginSiswaName, setLoginSiswaName] = useState('');
+
+      // Sinkronisasi Perubahan Data dari LocalStorage / Tab Lain secara Otomatis
+      useEffect(() => {
+        const handleStorageChange = () => {
+          const m = localStorage.getItem('elearning_materials_v3');
+          if (m) setMaterials(JSON.parse(m));
+          const q = localStorage.getItem('elearning_questions_v3');
+          if (q) setQuestions(JSON.parse(q));
+          const st = localStorage.getItem('elearning_students_v3');
+          if (st) setStudents(JSON.parse(st));
+          const sc = localStorage.getItem('elearning_scores_v3');
+          if (sc) setScores(JSON.parse(sc));
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
+      }, []);
+
+      useEffect(() => {
+        if (appSession) {
+          localStorage.setItem('elearning_student_session_v3', JSON.stringify(appSession));
+        } else {
+          localStorage.removeItem('elearning_student_session_v3');
+        }
+      }, [appSession]);
+
+      // Firebase Auth Listener
+      useEffect(() => {
+        const initAuth = async () => {
+          try {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+              await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+              await signInAnonymously(auth);
+            }
+          } catch (e) {
+            console.log("Firebase fallback lokal aktif");
+          }
+        };
+        initAuth();
+      }, []);
+
+      // Listener BroadcastChannel untuk Reset Status dari Guru
+      useEffect(() => {
+        if (!broadcast) return;
+        const handleMessage = (event) => {
+          const { type, payload } = event.data || {};
+          if (type === 'TEACHER_RESET_STATUS' && appSession) {
+            if (payload.studentName === appSession.username) {
+              showNotification("Guru telah mereset status Anda! Silakan lanjutkan membaca.");
+              window.dispatchEvent(new CustomEvent('RESET_FOCUS_BY_TEACHER'));
+            }
+          }
+        };
+
+        broadcast.addEventListener('message', handleMessage);
+        return () => broadcast.removeEventListener('message', handleMessage);
+      }, [appSession]);
+
+      const showNotification = (msg) => {
+        setNotification(msg);
+        setTimeout(() => setNotification(null), 4000);
+      };
+
+      // Helper Kirim Sinyal Presensi Realtime dari Siswa ke Guru
+      const sendStudentPresenceSignal = (presObj) => {
+        // 1. Simpan ke LocalStorage Live Monitor
+        const currentData = JSON.parse(localStorage.getItem('elearning_live_monitor') || '{}');
+        currentData[presObj.id] = presObj;
+        localStorage.setItem('elearning_live_monitor', JSON.stringify(currentData));
+
+        // 2. Broadcast ke Tab Browser Lain
+        if (broadcast) {
+          broadcast.postMessage({
+            type: 'STUDENT_PRESENCE_UPDATE',
+            payload: presObj
+          });
+        }
+
+        // 3. Simpan ke Firestore
+        try {
+          const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'student_presence', presObj.id);
+          setDoc(docRef, { ...presObj, lastUpdated: serverTimestamp() }).catch(() => {});
+        } catch (e) {}
+      };
+
+      // Handler Login Siswa
+      const handleSiswaLogin = (e) => {
+        e.preventDefault();
+        if (!loginSiswaName) {
+          showNotification("Silakan pilih atau masukkan nama siswa!");
+          return;
+        }
+
+        setAppSession({
+          username: loginSiswaName,
+          kelas: loginSiswaKelas,
+          subKelas: loginSiswaSubKelas
+        });
+        setActiveTab('dashboard');
+        showNotification(`Selamat datang ${loginSiswaName} (Kelas ${loginSiswaKelas}${loginSiswaSubKelas})!`);
+      };
+
+      const handleLogout = () => {
+        if (selectedMaterial && appSession) {
+          const key = `${appSession.username}_${selectedMaterial.id}`;
+          sendStudentPresenceSignal({
+            id: key,
+            studentName: appSession.username,
+            kelas: `${appSession.kelas}${appSession.subKelas}`,
+            materialId: selectedMaterial.id,
+            materialTitle: selectedMaterial.title,
+            status: 'offline',
+            remainingSeconds: 0,
+            lastUpdated: Date.now()
+          });
+        }
+        setAppSession(null);
+        setActiveTab('dashboard');
+        setSelectedMaterial(null);
+      };
+
+      // Submit Kuis Siswa
+      const handleSubmitQuiz = (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const matQs = questions.filter(q => q.materialId === selectedMaterial.id);
+
+        let correct = 0;
+        matQs.forEach(q => {
+          const userAns = (formData.get(q.id) || '').toString().trim().toLowerCase();
+          const targetAns = (q.correctAnswer || '').toString().trim().toLowerCase();
+
+          if (q.type === 'pg') {
+            if (userAns === targetAns) correct++;
+          } else {
+            if (userAns !== '' && (targetAns.includes(userAns) || userAns.includes(targetAns))) {
+              correct++;
+            }
+          }
+        });
+
+        const finalScore = Math.round((correct / (matQs.length || 1)) * 100);
+
+        const newScore = {
+          id: 'sc_' + Date.now(),
+          materialId: selectedMaterial.id,
+          materialTitle: selectedMaterial.title,
+          studentName: appSession.username,
+          kelas: `${appSession.kelas}${appSession.subKelas}`,
+          score: finalScore,
+          createdAt: Date.now()
+        };
+
+        const updatedScores = [newScore, ...scores];
+        setScores(updatedScores);
+        localStorage.setItem('elearning_scores_v3', JSON.stringify(updatedScores));
+
+        // Sinyal selesai membaca & menjawab
+        const key = `${appSession.username}_${selectedMaterial.id}`;
+        sendStudentPresenceSignal({
+          id: key,
+          studentName: appSession.username,
+          kelas: `${appSession.kelas}${appSession.subKelas}`,
+          materialId: selectedMaterial.id,
+          materialTitle: selectedMaterial.title,
+          status: 'completed',
+          remainingSeconds: 0,
+          lastUpdated: Date.now()
+        });
+
+        showNotification(`Selesai! Nilai Anda: ${finalScore}/100`);
+        setActiveTab('dashboard');
+        setSelectedMaterial(null);
+      };
+
+      if (!appSession) {
+        return (
+          <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-4 relative overflow-hidden">
+            <div className="absolute -top-40 -left-40 w-96 h-96 bg-blue-600/20 rounded-full blur-3xl pointer-events-none"></div>
+            <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-indigo-600/20 rounded-full blur-3xl pointer-events-none"></div>
+
+            <div className="w-full max-w-lg bg-slate-900/90 backdrop-blur-xl border border-slate-800 rounded-3xl p-8 shadow-2xl relative z-10">
+              <div className="text-center mb-8">
+                <div className="inline-flex p-3.5 bg-gradient-to-tr from-blue-600 to-indigo-500 rounded-2xl shadow-lg shadow-blue-500/30 mb-3">
+                  <BookOpen className="w-8 h-8 text-white" />
+                </div>
+                <h1 className="text-2xl font-extrabold text-white tracking-tight">Portal Belajar Siswa IPS</h1>
+                <p className="text-slate-400 text-xs mt-1">E-Learning Space & Interactive Student Module</p>
+              </div>
+
+              {notification && (
+                <div className="bg-red-500/20 border border-red-500/30 text-red-300 px-4 py-3 rounded-xl text-xs text-center mb-6">
+                  {notification}
+                </div>
+              )}
+
+              <form onSubmit={handleSiswaLogin} className="space-y-4">
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 mb-1.5">Tingkat Kelas</label>
+                    <select 
+                      value={loginSiswaKelas}
+                      onChange={(e) => {
+                        setLoginSiswaKelas(e.target.value);
+                        setLoginSiswaName('');
+                      }}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200 text-xs focus:border-blue-500 outline-none"
+                    >
+                      <option value="7">Kelas 7</option>
+                      <option value="8">Kelas 8</option>
+                      <option value="9">Kelas 9</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 mb-1.5">Rombel / Sub-Kelas</label>
+                    <select 
+                      value={loginSiswaSubKelas}
+                      onChange={(e) => {
+                        setLoginSiswaSubKelas(e.target.value);
+                        setLoginSiswaName('');
+                      }}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200 text-xs focus:border-blue-500 outline-none"
+                    >
+                      <option value="A">Rombel A</option>
+                      <option value="B">Rombel B</option>
+                      <option value="C">Rombel C</option>
+                      <option value="D">Rombel D</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1.5">Nama Lengkap Siswa</label>
+                  {students.filter(s => s.kelas === loginSiswaKelas && s.subKelas === loginSiswaSubKelas).length > 0 ? (
+                    <select 
+                      value={loginSiswaName}
+                      onChange={(e) => setLoginSiswaName(e.target.value)}
+                      required
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200 text-xs focus:border-blue-500 outline-none"
+                    >
+                      <option value="">-- Pilih Nama Siswa Terdaftar --</option>
+                      {students
+                        .filter(s => s.kelas === loginSiswaKelas && s.subKelas === loginSiswaSubKelas)
+                        .map(s => (
+                          <option key={s.id} value={s.name}>{s.name}</option>
+                        ))}
+                    </select>
+                  ) : (
+                    <input 
+                      type="text" 
+                      placeholder="Ketik Nama Lengkap Siswa..."
+                      value={loginSiswaName}
+                      onChange={(e) => setLoginSiswaName(e.target.value)}
+                      required
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-slate-200 text-xs focus:border-blue-500 outline-none"
+                    />
+                  )}
+                </div>
+
+                <button type="submit" className="w-full mt-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-blue-600/30 flex justify-center items-center gap-2 text-xs">
+                  <LogIn className="w-4 h-4"/> Masuk Pembelajaran Siswa
+                </button>
+              </form>
+            </div>
+          </div>
+        );
+      }
+
+      if (activeTab === 'belajar' && selectedMaterial) {
+        return (
+          <StudentMaterialView 
+            selectedMaterial={selectedMaterial}
+            appSession={appSession}
+            questions={questions}
+            scores={scores}
+            onBack={() => { setActiveTab('dashboard'); setSelectedMaterial(null); }}
+            onSubmitQuiz={handleSubmitQuiz}
+            sendStudentPresenceSignal={sendStudentPresenceSignal}
+          />
+        );
+      }
+
+      const myClassMaterials = materials.filter(m => {
+        if (m.kelas !== appSession.kelas) return false;
+        if (m.subKelasTarget && m.subKelasTarget !== 'semua' && m.subKelasTarget !== appSession.subKelas) {
+          return false;
+        }
+        return true;
+      });
+
+      return (
+        <div className="min-h-screen bg-slate-950 text-slate-100">
+          {notification && (
+            <div className="fixed top-4 right-4 z-50 bg-blue-600 text-white px-5 py-3 rounded-2xl shadow-xl font-bold text-xs animate-bounce border border-blue-400/30">
+              {notification}
+            </div>
+          )}
+
+          <nav className="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-40">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="flex justify-between h-16 items-center">
+                <div className="flex items-center gap-3 cursor-pointer" onClick={() => {setActiveTab('dashboard'); setSelectedMaterial(null);}}>
+                  <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-600/30">
+                    <BookOpen className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <span className="text-base font-extrabold text-white block leading-none">Portal Siswa IPS</span>
+                    <span className="text-[10px] text-slate-400">SMP/MTs Portal Belajar</span>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4">
+                  <div className="text-right hidden sm:block">
+                    <div className="text-xs font-bold text-white">{appSession.username}</div>
+                    <div className="text-[10px] text-slate-400">
+                      Siswa Kelas {appSession.kelas}{appSession.subKelas}
+                    </div>
+                  </div>
+                  <button onClick={handleLogout} className="flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all">
+                    <LogOut className="w-3.5 h-3.5" /> Keluar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </nav>
+
+          <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+            <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex justify-between items-center shadow-xl">
+              <div>
+                <h2 className="text-xl font-bold text-white">Materi Pembelajaran IPS - Kelas {appSession.kelas}{appSession.subKelas}</h2>
+                <p className="text-slate-400 text-xs mt-1">Pilih materi di bawah untuk dibaca. Timer belajar akan otomatis berjalan saat materi dibuka.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {myClassMaterials.map(m => (
+                <div 
+                  key={m.id} 
+                  onClick={() => { setSelectedMaterial(m); setActiveTab('belajar'); }} 
+                  className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden flex flex-col hover:border-blue-500 cursor-pointer transition-all shadow-xl group"
+                >
+                  {m.imageUrl && (
+                    <div className="h-40 bg-slate-950 overflow-hidden">
+                      <img src={m.imageUrl} alt={m.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                    </div>
+                  )}
+                  <div className="p-5 flex-1 flex flex-col">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="bg-blue-500/10 text-blue-400 text-[10px] font-bold px-2 py-0.5 rounded border border-blue-500/20">
+                        Semester {m.semester}
+                      </span>
+                      <span className="text-[11px] text-amber-400 font-bold flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {m.durationMinutes} Mnt
+                      </span>
+                    </div>
+
+                    <h3 className="font-bold text-white text-sm mb-2 leading-snug">{m.title}</h3>
+                    <p className="text-xs text-slate-400 line-clamp-3 mb-4 leading-relaxed">{m.content}</p>
+
+                    <div className="mt-auto pt-4 border-t border-slate-800 text-xs text-blue-400 font-semibold flex items-center justify-between">
+                      <span>Buka & Baca Materi</span>
+                      <ArrowLeft className="w-3.5 h-3.5 rotate-180" />
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {myClassMaterials.length === 0 && (
+                <div className="col-span-full p-12 text-center text-slate-500 border border-dashed border-slate-800 rounded-2xl">
+                  <BookOpen className="w-10 h-10 mx-auto mb-2 text-slate-600"/>
+                  <p className="font-semibold text-xs">Belum ada materi khusus untuk Kelas {appSession.kelas}{appSession.subKelas}.</p>
+                </div>
+              )}
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    function StudentMaterialView({ selectedMaterial, appSession, questions, scores, onBack, onSubmitQuiz, sendStudentPresenceSignal }) {
+      const [remainingSeconds, setRemainingSeconds] = useState((selectedMaterial.durationMinutes || 15) * 60);
+      const [focusStatus, setFocusStatus] = useState('active'); 
+      const presKey = `${appSession.username}_${selectedMaterial.id}`;
+
+      // Handle Timer Countdown
+      useEffect(() => {
+        const timerInterval = setInterval(() => {
+          setRemainingSeconds(prev => {
+            if (prev <= 1) {
+              clearInterval(timerInterval);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+
+        return () => clearInterval(timerInterval);
+      }, []);
+
+      // Realtime Detection tab switch / window blur / focus change
+      useEffect(() => {
+        const updatePresence = (status) => {
+          setFocusStatus(status);
+          sendStudentPresenceSignal({
+            id: presKey,
+            studentName: appSession.username,
+            kelas: `${appSession.kelas}${appSession.subKelas}`,
+            materialId: selectedMaterial.id,
+            materialTitle: selectedMaterial.title,
+            status,
+            remainingSeconds,
+            lastUpdated: Date.now()
+          });
+        };
+
+        updatePresence('active');
+
+        const handleVisibilityChange = () => {
+          if (document.hidden) {
+            updatePresence('warning');
+          } else {
+            updatePresence('active');
+          }
+        };
+
+        const handleBlur = () => updatePresence('warning');
+        const handleFocus = () => updatePresence('active');
+
+        const handleResetByTeacher = () => {
+          setFocusStatus('active');
+          updatePresence('active');
+        };
+
+        document.addEventListener('visibilitychange', handleVisibilityChange);
+        window.addEventListener('blur', handleBlur);
+        window.addEventListener('focus', handleFocus);
+        window.addEventListener('RESET_FOCUS_BY_TEACHER', handleResetByTeacher);
+
+        return () => {
+          document.removeEventListener('visibilitychange', handleVisibilityChange);
+          window.removeEventListener('blur', handleBlur);
+          window.removeEventListener('focus', handleFocus);
+          window.removeEventListener('RESET_FOCUS_BY_TEACHER', handleResetByTeacher);
+        };
+      }, [remainingSeconds]);
+
+      const matQuestions = questions.filter(q => q.materialId === selectedMaterial.id);
+      const alreadyTaken = scores.some(s => s.materialId === selectedMaterial.id && s.studentName === appSession.username);
+
+      const mins = Math.floor(remainingSeconds / 60);
+      const secs = remainingSeconds % 60;
+      const timeStr = `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+
+      return (
+        <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 space-y-6 max-w-4xl mx-auto">
+          {/* Sticky Header Status & Timer */}
+          <div className="sticky top-4 z-30 bg-slate-900/95 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 shadow-2xl flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              {focusStatus === 'active' ? (
+                <div className="flex items-center gap-2 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 px-3 py-1.5 rounded-xl text-xs font-bold">
+                  <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping"></span>
+                  🟢 Status: Sedang Belajar (Fokus)
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 bg-yellow-500/20 text-yellow-300 border border-yellow-500/40 px-3 py-1.5 rounded-xl text-xs font-bold">
+                  <AlertTriangle className="w-4 h-4 text-yellow-400 animate-bounce" />
+                  🟡 Status: Terdeteksi Membuka Tab Lain!
+                </div>
+              )}
+            </div>
+
+            <div className="flex items-center gap-4">
+              <div className="text-right">
+                <span className="block text-[10px] text-slate-400 font-semibold uppercase">Sisa Waktu Belajar</span>
+                <span className="text-lg font-mono font-extrabold text-amber-300 flex items-center justify-end gap-1">
+                  <Clock className="w-4 h-4 text-amber-400" /> {timeStr}
+                </span>
+              </div>
+              <button onClick={onBack} className="text-slate-400 hover:text-white bg-slate-950 p-2 rounded-xl border border-slate-800">
+                <ArrowLeft className="w-4 h-4"/>
+              </button>
+            </div>
+          </div>
+
+          {/* Content Material */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+            <div className="p-6 md:p-8 space-y-6">
+              <div>
+                <span className="bg-blue-500/10 text-blue-400 text-xs font-bold px-3 py-1 rounded-lg border border-blue-500/20">
+                  IPS Kelas {selectedMaterial.kelas} • Semester {selectedMaterial.semester}
+                </span>
+                <h1 className="text-2xl font-black text-white mt-3 leading-tight">{selectedMaterial.title}</h1>
+              </div>
+
+              {selectedMaterial.imageUrl && (
+                <div className="rounded-2xl overflow-hidden border border-slate-800 bg-slate-950 max-h-[400px]">
+                  <img src={selectedMaterial.imageUrl} alt={selectedMaterial.title} className="w-full h-full object-cover" />
+                </div>
+              )}
+
+              <div className="text-slate-200 text-sm md:text-base leading-relaxed whitespace-pre-wrap font-sans">
+                {selectedMaterial.content}
+              </div>
+
+              {selectedMaterial.source && (
+                <div className="p-4 bg-slate-950 rounded-xl border border-slate-800 text-xs text-slate-400">
+                  <span className="font-bold text-slate-200">Sumber / Referensi:</span> {selectedMaterial.source}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Quiz Section */}
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 md:p-8 shadow-xl">
+            <h3 className="text-lg font-bold text-white mb-6 flex items-center gap-2"><CheckCircle className="text-emerald-500"/> Soal Latihan & Evaluasi</h3>
+
+            {matQuestions.length === 0 ? (
+              <p className="text-slate-500 text-xs italic">Belum ada kuis/soal latihan untuk materi ini.</p>
+            ) : alreadyTaken ? (
+              <div className="text-center py-6">
+                <Award className="w-12 h-12 text-yellow-500 mx-auto mb-2"/>
+                <p className="text-white font-bold text-sm">Anda telah menyelesaikan kuis latihan untuk materi ini!</p>
+              </div>
+            ) : (
+              <form onSubmit={onSubmitQuiz} className="space-y-6">
+                {matQuestions.map((q, idx) => (
+                  <div key={q.id} className="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+                    <p className="font-semibold text-white text-xs leading-relaxed">
+                      <span className="bg-blue-600 text-white w-5 h-5 inline-flex items-center justify-center rounded-full text-[10px] mr-2">{idx + 1}</span>
+                      {q.questionText}
+                    </p>
+
+                    {q.type === 'pg' ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2 pl-7">
+                        {['A', 'B', 'C', 'D'].map(opt => (
+                          <label key={opt} className="flex items-center p-2.5 rounded-lg border border-slate-800 bg-slate-900 hover:border-blue-500 cursor-pointer text-xs text-slate-300">
+                            <input type="radio" name={q.id} value={opt} required className="mr-2 text-blue-600 focus:ring-0" />
+                            <span>{opt}. {q[`option${opt}`]}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="pl-7">
+                        <input type="text" name={q.id} required placeholder="Ketikkan jawaban isian Anda..." className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-xs text-white focus:border-blue-500 outline-none" />
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                <button type="submit" className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-xl transition-all text-xs shadow-lg shadow-emerald-600/30">
+                  Kumpulkan Jawaban Evaluasi
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    const root = createRoot(document.getElementById('root'));
+    root.render(<StudentApp />);
+  </script>
+</body>
+</html>
